@@ -1,15 +1,13 @@
-def simulate_step6(policyC, policyH, simseed, endk, policyM, params_sim1, params_sim2):
-    np.random.seed(simseed)
-
-    # testing:
-    # params_sim1 = params_dict
-    # params_sim2 = params_sim
-
+def simulate(policyC, policyH, endk, policyM, params_sim):
     # hyper-parameters for simulation
-    startage= params_sim2["startage"]
-    numSims = int(params_sim2["numSims"])
-    simlifespan = params_sim2["simlifespan"]
+    startage= params_sim["startage"]
+    numSims = int(params_sim["numSims"])
+    simlifespan = params_sim["simlifespan"]
+    simseed = params_sim["simseed"]
     length = simlifespan - startage + 1
+
+    # Set the seed
+    np.random.seed(simseed)
 
     # set up data grids
     c = np.full((length, numSims), np.nan)  # consumption
@@ -20,12 +18,12 @@ def simulate_step6(policyC, policyH, simseed, endk, policyM, params_sim1, params
     y = np.full((length, numSims), np.nan)  # human capital
 
     # parameters for asset and k distributions
-    A_mean      = params_sim1['A_mean']
-    V_A         = params_sim1['V_A']
-    HCt0_mean   = params_sim1['HCt0_mean']
-    HCt0_sd     = params_sim1['HCt0_sd']
-    sigma       = params_sim1['sigma']
-
+    A_mean      = params_sim['A_mean']
+    V_A         = params_sim['V_A']
+    HCt0_mean   = params_sim['HCt0_mean']
+    HCt0_sd     = params_sim['HCt0_sd']
+    sigma       = params_sim['sigma']
+    growth      = params_sim['growth']
     # get shocks
     mu          = -(1/2)*sigma**2 # mean of wage shock
     e1 = np.random.normal(mu, sigma, size=(length, numSims))

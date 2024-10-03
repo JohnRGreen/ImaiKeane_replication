@@ -1,13 +1,14 @@
 # Restarting this project from scratch in May, 2024.
-def solveProblem_step6(M_grid, k_grid, **params_sp):
+def solveProblem(M_grid, k_grid, **params_sp):
     # params_sp = params_dict
 
     # get the parameters 
-    beta_Tp1    = params_sp['beta_Tp1']
+    phi         = params_sp['phi']
     beta        = params_sp['beta']
     gamma       = params_sp['gamma']
     alpha       = params_sp['alpha']
     eta         = params_sp['eta']
+    growth      = params_sp['growth']
 
     # wage shocks:
     sigma       = params_sp['sigma']
@@ -17,6 +18,8 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
     quad = discretize_log_distribution(nq, mu, sigma)
 
     #### Set up grids ####
+    Vgrid            = np.full((nM+2,nK+1,lifespan),np.nan)
+    EVgrid           = np.full((nM+2,nK+1,lifespan),np.nan)
     policyC          = np.full((nM+2,nK+1,lifespan),np.nan)
     policyCprime          = np.full((nM+2,nK+1,lifespan),np.nan)
     ECprime =     np.full((nM+2,nK+1,lifespan),np.nan)
@@ -43,7 +46,7 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
     # In period T+1 we consume everything, use terminal period value function to get utility
     
     # get consumption func
-    lambdaconst = (beta_Tp1 * R)**(-1/gamma)
+    lambdaconst = (phi * R)**(-1/gamma)
     picc[ixt] = (R*lambdaconst) / ( 1 + (R*lambdaconst))
 
     # exclude M = 0 point
@@ -56,6 +59,10 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
 
     # get marginal value grid
     ECprime[:,:,ixt] = (policyC[:,:,ixt])**(-gamma)
+
+    # Calculate value
+    Vgrid[:,:,ixt] = (policyC[:,:,ixt]**(1-gamma))/(1-gamma) + (phi/(1-gamma))*((R * (1 - picc[ixt])*M_grid[:,ixt][:, None])**(1-gamma))
+    EVgrid[:,:,ixt] = Vgrid[:,:,ixt]
     #### END PERIOD T ####
 
     #### period T-1 ####
@@ -70,11 +77,10 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
     endC1[:,:,ixt] = lambdaconst * policyC[1:(nM+1),1:,ixt+1]
 
     # endogeneous H
-    endk[1:,ixt] = endk[1:,ixt+1]/(1+growth[ixt])
+    # endk[1:,ixt] = endk[1:,ixt+1]/(1+growth[ixt])
+    endk[1:,ixt] = endk[1:,ixt+1]
     prevK = np.tile(endk[1:,ixt], (nK, 1))
     endH1[:,:,ixt] = ((beta/alpha) * prevK * ECprime[1:(nM+1),1:,ixt+1])**(1/(eta-1))
-    # ((beta/(alpha*eta)) * (prevK[0,ixk]/100)* ECprime[0,ixk,ixt+1])**(1/(eta-1))
-    # diff = h - ((beta/(alpha*eta))*(k)*ecprime)**(1/(eta-1))
 
     # Then back out M_{T-1}
     Mtemp = np.tile(M_grid[1:(nM+1),ixt+1],(nM,1)).T
@@ -165,8 +171,9 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
         kstart = nK
 
     # In period T-1, we have analytic form for optimal solution when credit constrained
-    policyH[0,:,ixt] = ( (beta/alpha) * (endk[:,ixt]**(1-gamma)) * picc[ixt+1]**(-gamma) )**(1/(eta-1+gamma))
+    policyH[0,:,ixt] = ((beta/alpha) * (endk[:,ixt]**(1-gamma)) * picc[ixt+1]**(-gamma) )**(1/(eta-1+gamma))
     policyC[0,:,ixt] = cmin
+    # policyH0= policyH[0,:,ixt].copy()
 
     # Whenever we have anough values, interpolate
     for ixk in range(kstart):
@@ -220,6 +227,22 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
     policyH[nM+1,:,ixt] = 0
     policyC[nM+1,:,ixt] = picc[ixt] * policyM[nM+1,ixt]
    
+    # try numerical optimization here
+    # minterp = policyM[:,ixt+1]
+    # kinterp = endk[:,ixt+1]
+    # # Create a 2D interpolation function
+    # interpolator = RegularGridInterpolator((minterp, kinterp), EVgrid[:,:,ixt+1],
+    #                                     method='linear', bounds_error=False, fill_value=None)
+    # for ixk in range(nK):
+    #     bounds = [(1e-8, None)] 
+    #     # start  = policyH[0,ixk+1,ixt+1]
+    #     start = 20.4
+    #     thisK = endk[ixk+1,ixt]
+    #     sol = minimize(getH, start, 
+    #             args=(thisK, alpha,eta,beta,interpolator,growth[ixt]),
+    #             bounds=bounds, method='L-BFGS-B', tol=1e-10)
+    #     policyH[0,ixk+1,ixt] = sol.x
+
     # Check monotonicity of consumption:
     # np.all(np.diff(policyC[:,:,ixt], axis=1) >= 0)
     # np.where(np.diff(policyC[:,:,ixt], axis=1) < 0)
@@ -249,7 +272,7 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
     # quad points of K
     Kvec = endk[1:,ixt][:,np.newaxis] * quad
     # mask for extrapolation
-    above_mask = Kvec > endk[1:,ixt].max() 
+    # above_mask = Kvec > endk[1:,ixt].max() 
 
     # In order to keep this going, we need to get a dense grid of E[c_t] around the "good", non-constrained EGM points. 
     ixk1 = np.argmax(valid_indices)
@@ -262,6 +285,21 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
         egmkindex[ixk] = np.abs(endk[:, ixt] - egmk[ixk, ixt]).argmin()
     # egmkindex = egmkindex.astype(int)
     subegmmask[:,:,ixt] = egmmask[1:(nM+1), egmkindex.astype(int), ixt] + cpath[1:(nM+1), egmkindex.astype(int), ixt]
+
+    # Get value grid
+    minterp = policyM[:,ixt+1]
+    kinterp = endk[:,ixt+1]
+    # Create a 2D interpolation function
+    nextm = R*(np.tile(policyM[:,ixt],(nK+1,1)).T - policyC[:,:,ixt]) + np.tile(endk[:,ixt],(nM+2,1))*policyH[:,:,ixt]
+    nextk = np.tile(endk[:,ixt],(nM+2,1)) * (1+growth[ixt])
+    interpolator = RegularGridInterpolator((minterp, kinterp), EVgrid[:,:,ixt+1],
+                                        method='linear', bounds_error=False, fill_value=None)
+    Vgrid[:,:,ixt] = (policyC[:,:,ixt]**(1-gamma))/(1-gamma) - (alpha/eta)* policyH[:,:,ixt]**eta + beta * interpolator((nextm,nextk))
+    Kvecfull = endk[:,ixt][:,np.newaxis] * quad
+
+    for ixm in range(nM+2):
+        v_vec = np.interp(Kvecfull, endk[:,ixt], Vgrid[ixm,:,ixt])
+        EVgrid[ixm,:,ixt] = np.mean(v_vec, axis=1)
 
     # Set up grids for expected marginal u of consumption
     for ixm in range(nM):
@@ -296,7 +334,7 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
     for ixt in range(lifespan-3, -1, -1):
     # for ixt in range(lifespan-3, 9, -1):
         # ixt = lifespan-1-1-1
-        print(ixt)
+        # print(ixt)
         # limiting function
         picc[ixt] = (R*lambdaconst*picc[ixt+1]) / ( 1 + (R*lambdaconst*picc[ixt+1]))
 
@@ -397,9 +435,9 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
         minterp = policyM[:,ixt+1]
         kinterp = endk[:,ixt+1]
         # Create a 2D interpolation function
-        interpolator = RegularGridInterpolator((minterp, kinterp), ECprime[:,:,ixt+1],
+        interpolator = RegularGridInterpolator((minterp, kinterp), EVgrid[:,:,ixt+1],
                                             method='linear', bounds_error=False, fill_value=None)
-          
+        
         # Will interpolate on this period's solution for our new grid
         for ixk in range(kstart):
             # print(ixk)
@@ -484,9 +522,9 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
 
         # edge case
         policyC[0,0,ixt] = cmin
-        policyH[0,0,ixt] = minimize(getH, start, 
-                    args=(endk[0,ixt], alpha,eta,beta,interpolator,growth[ixt]),
-                    bounds=bounds, method='L-BFGS-B', tol=1e-10).x[0]
+        # policyH[0,0,ixt] = minimize(getH, start, 
+        #             args=(endk[0,ixt], alpha,eta,beta,interpolator,growth[ixt]),
+        #             bounds=bounds, method='L-BFGS-B', tol=1e-10).x[0]
         policyH[0,0,ixt] = 0
 
         # for ixk in range(nK):
@@ -556,6 +594,22 @@ def solveProblem_step6(M_grid, k_grid, **params_sp):
         for ixk in range(nK):
             egmkindex[ixk] = np.abs(endk[:, ixt] - egmk[ixk, ixt]).argmin()
         subegmmask[:,:,ixt] = egmmask[1:(nM+1), egmkindex.astype(int), ixt] + cpath[1:(nM+1), egmkindex.astype(int), ixt]
+
+        # Get value grid
+        minterp = policyM[:,ixt+1]
+        kinterp = endk[:,ixt+1]
+        # Create a 2D interpolation function
+        nextm = R*(np.tile(policyM[:,ixt],(nK+1,1)).T - policyC[:,:,ixt]) + np.tile(endk[:,ixt],(nM+2,1))*policyH[:,:,ixt]
+        nextk = np.tile(endk[:,ixt],(nM+2,1)) * (1+growth[ixt])
+        nextk= np.clip(nextk,np.min(kinterp),np.max(kinterp))
+        interpolator = RegularGridInterpolator((minterp, kinterp), EVgrid[:,:,ixt+1],
+                                            method='linear', bounds_error=False, fill_value=None)
+        Vgrid[:,:,ixt] = (policyC[:,:,ixt]**(1-gamma))/(1-gamma) - (alpha/eta)* policyH[:,:,ixt]**eta + beta * interpolator((nextm,nextk))
+        Kvecfull = endk[:,ixt][:,np.newaxis] * quad
+
+        for ixm in range(nM+2):
+            v_vec = np.interp(Kvecfull, endk[:,ixt], Vgrid[ixm,:,ixt])
+            EVgrid[ixm,:,ixt] = np.mean(v_vec, axis=1)
 
         # Set up grids for expected marginal u of consumption
         for ixm in range(nM):
