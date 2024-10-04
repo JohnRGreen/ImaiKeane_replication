@@ -1,5 +1,7 @@
 # Imai and Keane (2004) replication
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JohnRGreen/ImaiKeane_replication/HEAD)
+
 This repository will replicate the lifecycle savings and labor supply of [Imai and Keane (2004)](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1468-2354.2004.00138.x) in Python, contributing to the [REMARK](https://github.com/econ-ark/REMARK) project from [Econ-ARK](https://github.com/econ-ark). The main product of interest is a Jupyter Notebook  which reviews that paper and introduces the machinery behind the replication.
 
 The repository contains the following components:
