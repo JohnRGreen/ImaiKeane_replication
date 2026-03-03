@@ -4,19 +4,19 @@
 
 ## Overview
 
-This repository aims to replicate the lifecycle savings and labor supply model presented in [Imai and Keane (2004)](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1468-2354.2004.00138.x). The replication is done securely and robustly in Python. 
+This repository aims to replicate the lifecycle savings and labor supply model presented in [Imai and Keane (2004)](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1468-2354.2004.00138.x). The replication is done in Python. 
 
-This work represents a direct contribution to the [REMARK](https://github.com/econ-ark/REMARK) project led by the open-source community [Econ-ARK](https://github.com/econ-ark). The primary objective of REMARK is to promote reproducibility and transparency across computational economics.
+This work represents a direct contribution to the [REMARK](https://github.com/econ-ark/REMARK) project led by the open-source community at [Econ-ARK](https://github.com/econ-ark). The primary objective of REMARK is to promote reproducibility and transparency across computational economics.
 
-The central piece of this repository is an educational and interactive Jupyter Notebook. This notebook comprehensively reviews the insights of the original paper, breaking down the mathematical models and introducing the computational machinery and algorithms necessary for a complete replication. 
+The central piece of this repository is an educational and interactive Jupyter Notebook. This notebook reviews the insights of the original paper, breaking down the model and introducing the computational machinery and algorithms necessary for a complete replication.
 
 ## Paper Summary and Objectives
 
-Imai and Keane (2004) is a landmark study exploring the intricate dynamics of lifecycle savings and labor supply decisions. At its core, the study highlights how the accumulation of human capital, when interacting with borrowing constraints, effectively explains traditionally puzzling paths of consumption and work hours observed over an individual's life cycle.
+Imai and Keane (2004) studies the dynamics of lifecycle savings and labor supply decisions when wages are endogenous. At its core, the study highlights how the accumulation of human capital may explain the divergence between micro- and macro-estimates of the intertemporal elasticity of subsitution.
 
 The authors established that when the future return to human capital is appropriately accounted for in the modeling, the elasticity of intertemporal substitution in labor supply emerges significantly higher than estimated by preceding, less nuanced models.
 
-By shifting this paradigm into modern Python, we ensure that the model behaves transparently and is universally accessible to researchers, academics, and students alike within the broader economics community. The structural life-cycle model here illustrates how dynamic programming provides the bedrock for empirical evaluation.
+By shifting this paradigm into Python, we ensure that the model behaves transparently and is accessible to researchers, academics, and students alike within the broader economics community.
 
 An hour of work today rewards the agent with income, but it also increases utility through the rest of the lifecycle by increasing human capital and thus leading to higher earnings throughout the lifecycle. Because of this dynamic, at younger ages the true return to work may be much larger than the observed wage. When agents are older, their wages are higher but the returns to increased human capital are lower because they have fewer future years of work. The net result is a reasonably flat shadow wage which captures the net returns to work.
 
