@@ -4,7 +4,7 @@
 
 ## Overview
 
-This repository aims to meticulously replicate the lifecycle savings and labor supply mechanics originally presented in the seminal paper by [Imai and Keane (2004)](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1468-2354.2004.00138.x). The replication is done securely and robustly in Python. 
+This repository aims to replicate the lifecycle savings and labor supply model presented in [Imai and Keane (2004)](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1468-2354.2004.00138.x). The replication is done securely and robustly in Python. 
 
 This work represents a direct contribution to the [REMARK](https://github.com/econ-ark/REMARK) project led by the open-source community [Econ-ARK](https://github.com/econ-ark). The primary objective of REMARK is to promote reproducibility and transparency across computational economics.
 
